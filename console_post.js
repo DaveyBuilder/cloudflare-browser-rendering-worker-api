@@ -1,4 +1,4 @@
-fetch('http://127.0.0.1:8787/', {
+fetch('https://yourbrowserrenderworker.workers.dev', {
 	method: 'POST',
 	headers: { 'Content-Type': 'application/json' },
 	body: JSON.stringify({
@@ -27,9 +27,9 @@ fetch('http://127.0.0.1:8787/', {
 		if (!response.ok) {
 			throw new Error('Network response was not ok');
 		}
-		return response.text(); // Change this to handle text response
+		return response.json(); // Change this to handle text response
 	})
 	.then((text) => {
-		console.log(text); // Log the text response
+		console.log(JSON.stringify(text, null, 2)); // Log the text response
 	})
 	.catch((error) => console.error('Error:', error));

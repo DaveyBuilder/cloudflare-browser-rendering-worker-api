@@ -3,14 +3,20 @@ import puppeteer from '@cloudflare/puppeteer';
 export default {
 	async fetch(request, env) {
 		if (request.method !== 'POST') {
-			return new Response('This endpoint only accepts POST requests', { status: 405 });
+			return new Response(JSON.stringify({ message: 'This endpoint only accepts POST requests' }), {
+				status: 405,
+				headers: { 'content-type': 'application/json' },
+			});
 		}
 
 		const requestData = await request.json();
 		const url = requestData.url;
 
 		if (!url) {
-			return new Response('Please provide a URL in the JSON body with a "url" key', { status: 400 });
+			return new Response(JSON.stringify({ message: 'Please provide a URL in the JSON body with a "url" key' }), {
+				status: 400,
+				headers: { 'content-type': 'application/json' },
+			});
 		}
 
 		// Function to clean the key string used in the Cloudflare KV store (for saving screenshots)
@@ -29,6 +35,9 @@ export default {
 
 			const browser = await puppeteer.launch(env.MYBROWSER);
 			const page = await browser.newPage();
+			// await page.setUserAgent(
+			// 	'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+			// );
 			await page.goto(normalizedUrl, { waitUntil: 'load' });
 			await new Promise((r) => setTimeout(r, 1000));
 
@@ -77,8 +86,9 @@ export default {
 					}
 					if (instruction.screenshot) {
 						const img = await page.screenshot();
-						const kvKey = `screenshot-${sanitizeKey(url)}.jpg`;
-						await env.BROWSER_KV_DEMO.put(kvKey, img, {
+						const timestamp = Date.now();
+						const kvKey = `screenshot-${sanitizeKey(url)}-${timestamp}.jpg`;
+						await env.BROWSER_RENDER_SCREENSHOTS.put(kvKey, img, {
 							expirationTtl: 60 * 60 * 24,
 						});
 						actionDescription = `screenshot`;
@@ -90,8 +100,9 @@ export default {
 
 					// Take a screenshot so the problem can be investigated
 					const img = await page.screenshot();
-					const kvKey = `${sanitizeKey(actionDescription)}-${sanitizeKey(url)}.jpg`;
-					await env.BROWSER_KV_DEMO.put(kvKey, img, {
+					const timestamp = Date.now();
+					const kvKey = `${sanitizeKey(actionDescription)}-${sanitizeKey(url)}-${timestamp}.jpg`;
+					await env.BROWSER_RENDER_SCREENSHOTS.put(kvKey, img, {
 						expirationTtl: 60 * 60 * 24,
 					});
 				}
@@ -107,7 +118,10 @@ export default {
 				},
 			});
 		} catch (error) {
-			return new Response(`Failed to process the URL: ${error.message}`, { status: 500 });
+			return new Response(JSON.stringify({ message: `Failed to process the URL: ${error.message}` }), {
+				status: 500,
+				headers: { 'content-type': 'application/json' },
+			});
 		}
 	},
 };
