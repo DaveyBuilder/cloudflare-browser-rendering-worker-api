@@ -27,9 +27,9 @@ fetch('https://yourbrowserrenderworker.workers.dev', {
 		if (!response.ok) {
 			throw new Error('Network response was not ok');
 		}
-		return response.json(); // Change this to handle text response
+		return response.json();
 	})
 	.then((text) => {
-		console.log(JSON.stringify(text, null, 2)); // Log the text response
+		console.log(JSON.stringify(text, null, 2));
 	})
 	.catch((error) => console.error('Error:', error));
